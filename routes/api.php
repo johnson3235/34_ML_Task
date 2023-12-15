@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/get/products',[ProductController::class, 'index']);
 Route::get('/get/product/{id}',[ProductController::class, 'get_product_byId']);
+Route::get('/notify/product/{id}',[ProductController::class, 'markOutOfStock']);
 // Route::post('/add/brand',[BrandController::class, 'add_brand']);
 // Route::post('/update/brand',[BrandController::class, 'upadte_brand_data']);
 Route::delete('/delete/product/{id}',[ProductController::class, 'delete_product']);

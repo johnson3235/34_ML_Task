@@ -31,13 +31,14 @@ class Product extends Model
         $MaxPricedVariant = $product->variants->max(function ($variant) {
             return $variant;
         });
-        // Add a computed property for the lowest priced variant
+
         $product->lowestPricedVariant = $lowestPricedVariant->price;
         $product->max_price = $MaxPricedVariant->price;
-    
-        // Add a computed property for all options
+
         $product->allOptions = $this->getAllOptionsAttribute();
-       $product->defaultVariant = $lowestPricedVariant;
+        $product->defaultVariant = $lowestPricedVariant;
+
+
     
         return $product;
     }
@@ -48,10 +49,25 @@ class Product extends Model
 
         foreach ($this->variants as $variant) {
             $variantOptions = json_decode($variant->options->pluck('values')->flatten()->toJson(), true);
-            $options = array_merge($options, $variantOptions);
+
+        
+
+$flattenedData = array_merge(...array_map('json_decode', $variantOptions));
+
+// Filter out null values
+$filteredData = array_filter($flattenedData, function ($value) {
+    return $value !== null;
+});
+
+// Convert to lowercase
+$lowercaseData = array_map('strtolower', $filteredData);
+
+// Convert to a unique list
+$uniqueData = array_values(array_unique($lowercaseData));
+
         }
 
-        return $options;
+        return $uniqueData;
     }
 
 

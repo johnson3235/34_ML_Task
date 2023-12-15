@@ -1,38 +1,40 @@
 <?php
 
 // app/Notifications/ProductOutOfStockNotification.php
-
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class ProductOutOfStockNotification extends Notification
 {
-    use Queueable;
-
-
-    public $product;
-
-    public function __construct($product)
-    {
-        $this->product = $product;
-    }
-
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Product Out of Stock Notification')
-            ->line('The product is now out of stock.')
-            ->action('View Product', route('products.show', $notifiable->id));
+            ->line('Product Out of Stock Warning.')
+            ->action('Notification Action', url('/'))
+            ->line('Thank you for using our application!');
     }
 
-    public function toArray($notifiable)
+    // Add other notification channels if needed (broadcast, database, etc.)
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage([
+            'data' => 'Notification data',
+        ]);
+    }
+
+    public function toDatabase($notifiable)
     {
         return [
-            'productId' => $this->product->id,
-            // Additional data to send to the notification
+            // Data to store in the database
         ];
+    }
+
+    // Define the channels through which the notification should be sent
+    public function via($notifiable)
+    {
+        return ['mail', 'broadcast', 'database'];
     }
 }

@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Traits\ApiTrait;
+use app\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\ProductOutOfStockNotification;
+use Illuminate\Support\Facades\Mail;
 
 class ProductController extends Controller
 {
@@ -18,17 +22,6 @@ class ProductController extends Controller
                 $query->where('average_rating', $request->input('filter.average_rating'));
             }
 
-
-                    
-        if ($request->has('filter.options')) {
-            $options = explode(',', $request->input('filter.options'));
-
-            $query->whereHas('variants.options', function ($subquery) use ($options) {
-                $subquery->whereIn('values', $options);
-            });
-        }
-
-
     
             // Filter by max_price
             if ($request->has('filter.max_price')) {
@@ -37,7 +30,7 @@ class ProductController extends Controller
                 });
             }
     
-            $products = $query->with(['variants.options'])->get();
+            $products = $query->with(['variants'])->get();
 
             $fullProductData = [];
     
@@ -45,8 +38,14 @@ class ProductController extends Controller
                 $fullProductData[] = $product->getFullProductData($product->id);
             }
 
+            if ($request->has('filter.options')) {
+                $options = explode(',', $request->input('filter.options'));
+                $filterFunction = function ($product) use ($options) {
+                    return count(array_intersect($options, $product['all_options'])) > 0;
+                };
 
-
+                $fullProductData = array_filter($fullProductData, $filterFunction);   
+            }
 
     
             return ApiTrait::data(compact('fullProductData'), 'Products Get Successfully', 200);
@@ -82,55 +81,31 @@ class ProductController extends Controller
 
     private function notifyAdmin(Product $product)
     {
-        $adminEmail = 'admin@34ml.com'; // replace with the actual admin email
-
-        // Check if the admin exists
-        $admin = User::where('email', $adminEmail)->first();
+        $adminEmail = 'admin@34ml.com';
+    
+        $admin = \App\Models\User::where('email', $adminEmail)->first();
 
         if ($admin) {
             // Notify admin via notification
             Notification::send($admin, new ProductOutOfStockNotification($product));
-   
         }
     }
     
-    
 
-    public function get_product_byId($id)
-    {
-    
-        try {
-            $product = Product::FindOrFail($id);
-            return ApiTrait::data(compact('product'));
-        } catch (\Exception $e) {
-            return ApiTrait::errorMessage(['ID'=> 'Invalid Id'],'Unprocessable content',200);
-        }
-    }
-
-
-
-
-    // public function add_brand(AddBrandRequest $request)
+    // public function get_product_byId($id)
     // {
     
     //     try {
-    //         $brand = new Brand;
-    //         if ($request->hasFile('image')) {
-    //                 $path = Media::upload('',$request->file('image'),'brands/cars');
-    //                 $brand->image = $path;
-    //         }
-           
-    //         $brand->name = $request->name;
-            
-    //         if($brand->save()){
-    //             return ApiTrait::successMessage('Brand Created',200);
-    //         }
-        
-    //         return ApiTrait::errorMessage([],'Error : Brand Not Created',200);
+    //         $product = Product::FindOrFail($id);
+    //         return ApiTrait::data(compact('product'));
     //     } catch (\Exception $e) {
-    //         return ApiTrait::errorMessage([],'Some Thing Error',422);
+    //         return ApiTrait::errorMessage(['ID'=> 'Invalid Id'],'Unprocessable content',200);
     //     }
     // }
+
+
+
+
 
 
     public function delete_product($id)
@@ -146,50 +121,6 @@ class ProductController extends Controller
 
     }
     
-    // public function upadte_brand_data(updateBrandRequest $request)
-    // {
-
-    //     try {
-    //         $brand = Brand::findOrFail($request->id);
-
-
-    //         if ($request->hasFile('image')) {
-    //             $path = Media::upload('',$request->file('image'),'brands/cars');
-    //             if($brand->image != '1680436040_.png')
-    //             {
-    //                 $result = Storage::disk('s3')->delete("brands/cars/".$brand->image);
-    //                 if($result == true)
-    //                 {
-    //                     $brand->image = $path;
-                        
-    //                 }
-    //                 else
-    //                 {
-    //                     return ApiTrait::errorMessage(["error"=>'Error Cannot Delete past Image'],200);
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 $brand->image = $path;
-    //             }          
-            
-    //         }
-    //         $brand->name = $request->name;
-    //         // $brand->image = $request->image;
-    //         if($brand->save())
-    //         {
-    //             return ApiTrait::successMessage('Brand Updated Successfully',200);
-    //         }
-    //         else
-    //         {
-    //             return ApiTrait::errorMessage([],'Some Thing Error',200);
-    //         }
-    //     } catch (\Exception $e) {
-    //         return ApiTrait::errorMessage([],'Some Thing Error',422);
-    //     }
-    
-    //  }
-
 
 
 
