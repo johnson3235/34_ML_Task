@@ -13,7 +13,7 @@ class Product extends Model
     
     private function notifyAdmin(Product $product)
     {
-        $adminEmail = 'ijohnyoussef@gmail.com';
+        $adminEmail = 'admin@34ml.com';
     
         $admin = \App\Models\User::where('email', $adminEmail)->first();
 
