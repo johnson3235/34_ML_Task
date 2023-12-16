@@ -4,10 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\ProductOutOfStockNotification;
 
 class Product extends Model
 {
+
+    
+    private function notifyAdmin(Product $product)
+    {
+        $adminEmail = 'ijohnyoussef@gmail.com';
+    
+        $admin = \App\Models\User::where('email', $adminEmail)->first();
+
+        if ($admin) {
+            // Notify admin via notification
+            Notification::send($admin, new ProductOutOfStockNotification($product));
+        }
+    }
+
     public function variants()
     {
         return $this->hasMany(Variant::class);
@@ -38,7 +53,12 @@ class Product extends Model
         $product->allOptions = $this->getAllOptionsAttribute();
         $product->defaultVariant = $lowestPricedVariant;
 
-
+        if($product->is_in_stock == false)
+        {
+            $this->notifyAdmin($product);
+        }
+        
+    
     
         return $product;
     }
@@ -69,7 +89,6 @@ $uniqueData = array_values(array_unique($lowercaseData));
 
         return $uniqueData;
     }
-
 
 
 }

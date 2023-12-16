@@ -108,18 +108,7 @@ class ProductController extends Controller
 
 
 
-    public function delete_product($id)
-    {
-    
-        try {
-            $Product = Product::FindOrFail($id);
-            Product::where('id', $id)->delete();
-            return ApiTrait::successMessage('Brand Deleted Successfully',200);
-        } catch (\Exception $e) {
-            return ApiTrait::errorMessage(['id'=>'The Given Id Is Invalid'],'Unprocessable content',200);
-        }
 
-    }
     
 
 
